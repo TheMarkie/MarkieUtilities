@@ -1,0 +1,58 @@
+﻿<Window x:Class="Updater.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Updater" ResizeMode="CanMinimize" SizeToContent="WidthAndHeight">
+    <Grid Width="500" Height="200">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="55"/>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="25"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="80"/>
+            <ColumnDefinition Width="80"/>
+        </Grid.ColumnDefinitions>
+        <Grid Margin="5,5,5,0" Grid.ColumnSpan="6">
+            <ProgressBar x:Name="DownloadProgressBar" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Foreground="#FFA1B8E6"/>
+            <TextBlock x:Name="DownloadProgressTextBlock" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Grid>
+        <Grid Margin="5,5,5,0" Grid.Row="1" Grid.ColumnSpan="6">
+            <ProgressBar x:Name="InstallProgressBar" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Foreground="#FFA1B8E6"/>
+            <TextBlock x:Name="InstallProgressTextBlock" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Grid>
+
+        <TextBox x:Name="LogTextBox" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="5,5,0,5" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Visible" AcceptsReturn="True" Grid.Row="2" Grid.RowSpan="6"/>
+
+        <Button x:Name="MainButton" Content="Check" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="5,5,5,5" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" VerticalContentAlignment="Center" FontSize="18" Click="MainButton_Click"/>
+
+        <TextBox x:Name="CurrentVersionTextBox" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="3" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="5,0" TextWrapping="Wrap" IsReadOnly="True" Background="#FF8AB8E6" FontSize="14" PreviewMouseUp="CurrentVersionTextBox_PreviewMouseUp">
+            <TextBox.ToolTip>
+                Current version. Click to open changelog in your browser.
+            </TextBox.ToolTip>
+        </TextBox>
+        <TextBox x:Name="LatestVersionTextBox" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="3" Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="5,0" TextWrapping="Wrap" IsReadOnly="True" Background="#FF8AB8E6" FontSize="14" PreviewMouseUp="LatestVersionTextBox_PreviewMouseUp">
+            <TextBox.ToolTip>
+                Latest version. Click to open changelog in your browser.
+            </TextBox.ToolTip>
+        </TextBox>
+
+        <CheckBox x:Name="CleanUpdateCheckBox" Content="Clean update" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="4" Grid.ColumnSpan="2" Margin="5,0,5,0" VerticalContentAlignment="Center">
+            <CheckBox.ToolTip>
+                <StackPanel>
+                    <TextBlock>Download the full version instead of just the patch.</TextBlock>
+                    <TextBlock>Recommended if you are too behind or the mod doesn't work properly after updating.</TextBlock>
+                    <TextBlock>Download size is negligible.</TextBlock>
+                </StackPanel>
+            </CheckBox.ToolTip>
+        </CheckBox>
+
+        <Label x:Name="VersionLabel" Content="0.0.0" FontSize="10" Grid.Column="2" HorizontalAlignment="Right" Grid.Row="5" VerticalAlignment="Bottom" Padding="0,0,2,0" HorizontalContentAlignment="Right" VerticalContentAlignment="Bottom"/>
+    </Grid>
+</Window>

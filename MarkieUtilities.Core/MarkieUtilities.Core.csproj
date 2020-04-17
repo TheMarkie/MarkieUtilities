@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Authors>https://github.com/TheMarkie</Authors>
+    <Company />
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+
+  <!-- Custom properties -->
+  <PropertyGroup>
+    <TestEnvDir>D:\_Desktop\TestEnvironment\VanillaMatters</TestEnvDir>
+  </PropertyGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Delete Files="$(TestEnvDir)$(TargetFileName)" ContinueOnError="WarnAndContinue" />
+    <Copy SourceFiles="$(OutDir)$(TargetFileName)" DestinationFolder="$(TestEnvDir)" OverwriteReadOnlyFiles="true" />
+  </Target>
+
+</Project>
