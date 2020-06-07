@@ -31,8 +31,7 @@ namespace Updater {
 
         #region Config values
         public IniFile ConfigFile { get; private set; }
-        // Cache the section we call the most.
-        public IniSection Config { get; private set; }
+        public IniSection MainConfig { get; private set; }
 
         public string CurrentVersion {
             get { return CurrentVersionTextBox.Text; }
@@ -52,6 +51,7 @@ namespace Updater {
         }
         public OperationStage CurrentStage { get; private set; }
 
+        private GithubHelper _githubHelper;
         private AdvancedHttpClient _httpClient;
         private CancellationTokenSource _cancelTokenSource;
 
@@ -78,9 +78,18 @@ namespace Updater {
                 _log.Info( "Initializing..." );
 
                 ConfigFile = await IniFile.LoadAsync( App.ExecutableName + ".ini" );
-                Config = ConfigFile[App.ExecutableName];
-                CurrentVersion = Config["CurrentVersion"];
+                MainConfig = ConfigFile[App.ExecutableName];
+                CurrentVersion = MainConfig["CurrentVersion"];
                 _log.Info( "Config loaded." );
+
+                IniSection githubSection = ConfigFile["Github"];
+                _githubHelper = new GithubHelper(
+                    githubSection["UserName"],
+                    githubSection["RepoName"],
+                    githubSection["BaseUri"],
+                    githubSection["BaseApiUri"]
+                );
+                _log.Info( "Github helper initialized." );
 
                 _httpClient = new AdvancedHttpClient();
                 _httpClient.DefaultRequestHeaders.Accept.Clear();
@@ -136,10 +145,7 @@ namespace Updater {
         private async void StartCheck() {
             ToggleMainButton( false );
             try {
-                string uri = Config["CheckUri"];
-                if ( uri.IsNullOrEmpty() ) {
-                    throw new Exception( "CheckUri is null or empty." );
-                }
+                string uri = _githubHelper.GetLatestReleaseApiUri();
 
                 _log.Info( "Retrieving latest version tag..." );
                 using ( HttpResponseMessage response = await _httpClient.GetAsync( uri ) ) {
@@ -184,16 +190,12 @@ namespace Updater {
                 Directory.CreateDirectory( tempDirectory );
 
                 _log.Info( "Sending download request..." );
-                string baseUri = Config["DownloadUri"];
-                if ( baseUri.IsNullOrEmpty() ) {
-                    throw new Exception( "DownloadUri is empty." );
-                }
                 string fileName = GetFullFileName(
-                    Config["FileName"],
+                    MainConfig["FileName"],
                     latestVersion,
                     CleanUpdateCheckBox.IsChecked.GetValueOrDefault()
                 );
-                string uri = GetDownloadUri( baseUri, latestVersion, fileName );
+                string uri = _githubHelper.GetDownloadUri( latestVersion, fileName );
 
                 _cancelTokenSource = new CancellationTokenSource();
                 SetCurrentStage( OperationStage.Cancel );
@@ -246,10 +248,10 @@ namespace Updater {
                 _log.Info( "Updating config..." );
                 // Reload the ini file in case there was an update to the ini itself.
                 ConfigFile = await IniFile.LoadAsync( App.ExecutableName + ".ini" );
-                Config = ConfigFile[App.ExecutableName];
-                string currentVersion = Config["CurrentVersion"];
+                MainConfig = ConfigFile[App.ExecutableName];
+                string currentVersion = MainConfig["CurrentVersion"];
                 if ( string.Compare( currentVersion, latestVersion, true ) != 0 ) {
-                    Config["CurrentVersion"] = latestVersion;
+                    MainConfig["CurrentVersion"] = latestVersion;
 
                     ConfigFile.Save();
                 }
@@ -263,12 +265,7 @@ namespace Updater {
         }
 
         public void OpenChangelog( string version ) {
-            string baseUri = Config["ChangelogUri"];
-            if ( baseUri.IsNullOrEmpty() || version.IsNullOrEmpty() ) {
-                return;
-            }
-
-            Process.Start( GetChangelogUri( baseUri, version ) );
+            Process.Start( _githubHelper.GetReleaseUri( version ) );
         }
         #endregion
 
@@ -356,18 +353,6 @@ namespace Updater {
                 version,
                 cleanInstall ? string.Empty : "patch"
             );
-        }
-
-        private string GetDownloadUri( string baseUri, string version, string fileName ) {
-            return string.Format( "{0}/{1}/{2}",
-                baseUri,
-                version,
-                fileName
-            );
-        }
-
-        private string GetChangelogUri( string baseUri, string version ) {
-            return string.Format( "{0}/{1}", baseUri, version );
         }
         #endregion
     }

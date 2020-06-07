@@ -134,12 +134,12 @@
   <ItemGroup>
     <Resource Include="logo.ico" />
   </ItemGroup>
+  <PropertyGroup>
+    <ApplicationIcon>logo.ico</ApplicationIcon>
+  </PropertyGroup>
   <!-- Custom Properties -->
   <PropertyGroup>
     <TestEnvDir>D:\_Desktop\TestEnvironment\VanillaMatters</TestEnvDir>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationIcon>logo.ico</ApplicationIcon>
   </PropertyGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
