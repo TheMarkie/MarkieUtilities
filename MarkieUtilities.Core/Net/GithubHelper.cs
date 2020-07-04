@@ -32,16 +32,19 @@ namespace MarkieUtilities.Core.Net {
             }
         }
 
-        public string GetUri( string section, string subsection, string tag ) {
-            return string.Format(
-                "{0}/{1}/{2}/{3}/{4}/{5}",
+        public string GetUri( params string[] args ) {
+            StringBuilder builder = new StringBuilder( string.Format(
+                "{0}/{1}/{2}/",
                 BaseUri,
                 UserName,
-                RepoName,
-                section,
-                subsection,
-                tag
-            );
+                RepoName
+            ) );
+
+            for ( int i = 0; i < args.Length; i++ ) {
+                builder.Append( args[i] + "/" );
+            }
+
+            return builder.ToString();
         }
 
         public string GetReleaseApiUri( string tag ) {
