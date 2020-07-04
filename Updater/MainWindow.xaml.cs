@@ -14,6 +14,7 @@ using MarkieUtilities.Core.Net;
 using MarkieUtilities.Core.Config;
 using MarkieUtilities.Core.Json;
 using MarkieUtilities.Core.IO;
+using System.Net;
 
 namespace Updater {
     /// <summary>
@@ -223,10 +224,24 @@ namespace Updater {
                 CurrentVersionTextBox.Background = new SolidColorBrush( UpdatedVersionColor );
             }
             catch ( Exception e ) {
+                bool handled = false;
                 if ( e is TaskCanceledException ) {
                     _log.Info( "Update canceled." );
+                    handled = true;
                 }
-                else {
+                else if ( e is HttpRequestException ) {
+                    if ( e.Message.Contains( "404" ) ) {
+                        if ( CleanUpdateCheckBox.IsChecked.GetValueOrDefault() ) {
+                            _log.Error( "Update file not found, please contact the developer!" );
+                        }
+                        else {
+                            _log.Error( "Patch file not found, you should try again but with \"Clean update\" enabled." );
+                        }
+                        handled = true;
+                    }
+                }
+
+                if ( !handled ) {
                     _log.Error( "Failed to update: " + e.Message );
                 }
 
