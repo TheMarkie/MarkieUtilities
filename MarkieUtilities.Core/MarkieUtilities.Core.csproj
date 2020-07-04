@@ -14,7 +14,7 @@
 
   <!-- Custom properties -->
   <PropertyGroup>
-    <TestEnvDir>D:\_Desktop\TestEnvironment\VanillaMatters</TestEnvDir>
+    <TestEnvDir>D:\Desktop\TestEnvironment\VanillaMatters</TestEnvDir>
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

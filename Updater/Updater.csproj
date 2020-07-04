@@ -139,7 +139,7 @@
   </PropertyGroup>
   <!-- Custom Properties -->
   <PropertyGroup>
-    <TestEnvDir>D:\_Desktop\TestEnvironment\VanillaMatters</TestEnvDir>
+    <TestEnvDir>D:\Desktop\TestEnvironment\VanillaMatters</TestEnvDir>
   </PropertyGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
