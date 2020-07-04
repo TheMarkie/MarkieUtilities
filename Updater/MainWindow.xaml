@@ -53,6 +53,7 @@
             </CheckBox.ToolTip>
         </CheckBox>
 
+        <Label x:Name="DiscordLabel" Content="Discord" FontSize="10" Grid.Column="1" HorizontalAlignment="Left" Grid.Row="5" VerticalAlignment="Bottom" Padding="5,0,0,0" HorizontalContentAlignment="Right" VerticalContentAlignment="Bottom" MouseLeftButtonUp="DiscordLabel_MouseLeftButtonUp"/>
         <Label x:Name="VersionLabel" Content="0.0.0" FontSize="10" Grid.Column="2" HorizontalAlignment="Right" Grid.Row="5" VerticalAlignment="Bottom" Padding="0,0,2,0" HorizontalContentAlignment="Right" VerticalContentAlignment="Bottom"/>
     </Grid>
 </Window>

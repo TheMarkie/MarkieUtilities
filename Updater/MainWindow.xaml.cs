@@ -8,7 +8,6 @@ using System.Windows.Media;
 using System.Windows.Input;
 using System.IO;
 using System.Diagnostics;
-using MarkieUtilities.Core;
 using MarkieUtilities.Core.Log;
 using MarkieUtilities.Core.Net;
 using MarkieUtilities.Core.Config;
@@ -136,6 +135,10 @@ namespace Updater {
 
         private void LatestVersionTextBox_PreviewMouseUp( object sender, MouseButtonEventArgs e ) {
             OpenChangelog( LatestVersion );
+        }
+
+        private void DiscordLabel_MouseLeftButtonUp( object sender, MouseButtonEventArgs e ) {
+            Process.Start( MainConfig["DiscordUri"] );
         }
         #endregion
 
