@@ -44,23 +44,17 @@ namespace MarkieUtilities.Core.Net {
             );
         }
 
-        public string GetApiUri( string section, string subsection, string tag ) {
+        public string GetReleaseApiUri( string tag ) {
             return string.Format(
-                "{0}/{1}/{2}/{3}/{4}/{5}",
+                "{0}/repos/{1}/{2}/releases/{3}",
                 BaseApiUri,
-                section,
-                subsection,
                 UserName,
                 RepoName,
                 tag
             );
         }
-
-        public string GetReleaseApiUri( string tag ) {
-            return GetApiUri( "repos", "releases", tag );
-        }
         public string GetLatestReleaseApiUri() {
-            return GetApiUri( "repos", "releases", "latest" );
+            return GetReleaseApiUri( "latest" );
         }
 
         public string GetReleaseUri( string tag ) {
