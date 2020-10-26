@@ -12,14 +12,4 @@
     <Version>0.1.0</Version>
   </PropertyGroup>
 
-  <!-- Custom properties -->
-  <PropertyGroup>
-    <TestEnvDir>D:\Desktop\TestEnvironment\VanillaMatters</TestEnvDir>
-  </PropertyGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Delete Files="$(TestEnvDir)$(TargetFileName)" ContinueOnError="WarnAndContinue" />
-    <Copy SourceFiles="$(OutDir)$(TargetFileName)" DestinationFolder="$(TestEnvDir)" OverwriteReadOnlyFiles="true" />
-  </Target>
-
 </Project>
