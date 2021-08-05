@@ -139,11 +139,8 @@
   </PropertyGroup>
   <!-- Custom Properties -->
   <PropertyGroup>
-    <TestEnvDir>D:\Desktop\TestEnvironment\VanillaMatters</TestEnvDir>
   </PropertyGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
-    <Delete Files="$(TestEnvDir)$(TargetFileName)" ContinueOnError="WarnAndContinue" />
-    <Copy SourceFiles="$(OutDir)$(TargetFileName)" DestinationFolder="$(TestEnvDir)" OverwriteReadOnlyFiles="true" />
   </Target>
 </Project>
