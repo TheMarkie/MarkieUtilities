@@ -20,18 +20,12 @@ namespace Updater {
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window {
-        private const string TempDirectoryName = "Temp";
-
-        // A shade of yellow.
-        private static readonly Color OutdatedVersionColor = Color.FromRgb( 255, 255, 115 );
-        // A shade of green.
-        private static readonly Color UpdatedVersionColor = Color.FromRgb( 138, 255, 69 );
-
         private static readonly ILogSource _log = Log.GetLogSource( typeof( MainWindow ) );
 
         #region Config values
         public IniFile ConfigFile { get; private set; }
         public IniSection MainConfig { get; private set; }
+        public LatestVersionResponse LatestVersionResponse { get; private set; }
 
         public string CurrentVersion {
             get { return CurrentVersionTextBox.Text; }
@@ -51,7 +45,6 @@ namespace Updater {
         }
         public OperationStage CurrentStage { get; private set; }
 
-        private GithubHelper _githubHelper;
         private AdvancedHttpClient _httpClient;
         private CancellationTokenSource _cancelTokenSource;
 
@@ -79,17 +72,8 @@ namespace Updater {
 
                 ConfigFile = await IniFile.LoadAsync( App.ExecutableName + ".ini" );
                 MainConfig = ConfigFile[App.ExecutableName];
-                CurrentVersion = MainConfig["CurrentVersion"];
+                CurrentVersion = MainConfig[Constants.LatestVersionKey];
                 _log.Info( "Config loaded." );
-
-                IniSection githubSection = ConfigFile["Github"];
-                _githubHelper = new GithubHelper(
-                    githubSection["UserName"],
-                    githubSection["RepoName"],
-                    githubSection["BaseUri"],
-                    githubSection["BaseApiUri"]
-                );
-                _log.Info( "Github helper initialized." );
 
                 _httpClient = new AdvancedHttpClient();
                 _httpClient.DefaultRequestHeaders.Accept.Clear();
@@ -130,15 +114,15 @@ namespace Updater {
         }
 
         private void CurrentVersionTextBox_PreviewMouseUp( object sender, MouseButtonEventArgs e ) {
-            OpenChangelog( CurrentVersion );
+            OpenCurrentVersionDescription();
         }
 
         private void LatestVersionTextBox_PreviewMouseUp( object sender, MouseButtonEventArgs e ) {
-            OpenChangelog( LatestVersion );
+            OpenLatestVersionDescription();
         }
 
-        private void DiscordLabel_MouseLeftButtonUp( object sender, MouseButtonEventArgs e ) {
-            Process.Start( MainConfig["DiscordUri"] );
+        private void DiscordButton_Click(object sender, RoutedEventArgs e) {
+            Process.Start(MainConfig[Constants.DiscordUriKey]);
         }
         #endregion
 
@@ -149,26 +133,32 @@ namespace Updater {
         private async void StartCheck() {
             ToggleMainButton( false );
             try {
-                string uri = _githubHelper.GetLatestReleaseApiUri();
+                string latestVersionUri = MainConfig[Constants.LatestVersionApiUriKey];
 
                 _log.Info( "Retrieving latest version tag..." );
-                using ( HttpResponseMessage response = await _httpClient.GetAsync( uri ) ) {
+                using (HttpResponseMessage response = await _httpClient.GetAsync(latestVersionUri)) {
                     response.EnsureSuccessStatusCode();
 
                     string json = await response.Content.ReadAsStringAsync();
-                    dynamic payload = SimpleJson.DeserializeObject( json );
-                    string latestVersion = payload["tag_name"];
-                    LatestVersion = latestVersion;
+                    dynamic data = SimpleJson.DeserializeObject(json);
+                    LatestVersionResponse = new LatestVersionResponse {
+                        LatestVersion = data[Constants.ApiLatestVersionKey],
+                        LatestVersionUri = data[Constants.ApiLatestVersionUriKey],
+                        LatestVersionPatchUri = data[Constants.ApiLatestVersionPatchUriKey],
+                        LatestVersionDescriptionUri = data[Constants.ApiLatestVersionDescriptionUriKey]
+                    };
+                    string latestVersion = LatestVersionResponse.LatestVersion;
 
                     _log.Info( "Latest version tag '{0}' retrieved.", latestVersion );
+                    LatestVersion = latestVersion;
                     if ( string.Compare( CurrentVersion, latestVersion, true ) != 0 ) {
                         SetCurrentStage( OperationStage.Update );
-                        CurrentVersionTextBox.Background = new SolidColorBrush( OutdatedVersionColor );
+                        CurrentVersionTextBox.Background = new SolidColorBrush(Constants.OutdatedVersionColor);
                     }
                     else {
                         _log.Info( "Congratulations, you are on the latest version." );
                         SetCurrentStage( OperationStage.Done );
-                        CurrentVersionTextBox.Background = new SolidColorBrush( UpdatedVersionColor );
+                        CurrentVersionTextBox.Background = new SolidColorBrush(Constants.UpdatedVersionColor);
                     }
                 }
             }
@@ -180,11 +170,15 @@ namespace Updater {
         }
 
         private async void StartUpdate() {
+            if (LatestVersionResponse == null) {
+                return;
+            }
+
             ResetProgressBars();
 
             string currentDirectory = Directory.GetCurrentDirectory();
             string installDirectory = Path.GetDirectoryName( currentDirectory );
-            string tempDirectory = string.Format( "{0}\\{1}\\", currentDirectory, TempDirectoryName );
+            string tempDirectory = string.Format("{0}\\{1}\\", currentDirectory, Constants.TempDirectoryName);
             string latestVersion = LatestVersion;
             try {
                 _log.Info( "Preparing temp directory..." );
@@ -193,17 +187,11 @@ namespace Updater {
                 }
                 Directory.CreateDirectory( tempDirectory );
 
-                _log.Info( "Sending download request..." );
-                string fileName = GetFullFileName(
-                    MainConfig["FileName"],
-                    latestVersion,
-                    CleanUpdateCheckBox.IsChecked.GetValueOrDefault()
-                );
-                string uri = _githubHelper.GetDownloadUri( latestVersion, fileName );
-
                 _cancelTokenSource = new CancellationTokenSource();
                 SetCurrentStage( OperationStage.Cancel );
 
+                _log.Info("Sending download request...");
+                string uri = CleanUpdateCheckBox.IsChecked.GetValueOrDefault() ? LatestVersionResponse.LatestVersionUri : LatestVersionResponse.LatestVersionPatchUri;
                 string file = await _httpClient.DownloadFileAsync(
                     uri,
                     tempDirectory,
@@ -224,7 +212,7 @@ namespace Updater {
                 _log.Info( "Update installed successfully." );
                 SetCurrentStage( OperationStage.Done );
                 CurrentVersion = latestVersion;
-                CurrentVersionTextBox.Background = new SolidColorBrush( UpdatedVersionColor );
+                CurrentVersionTextBox.Background = new SolidColorBrush(Constants.UpdatedVersionColor);
             }
             catch ( Exception e ) {
                 bool handled = false;
@@ -267,12 +255,8 @@ namespace Updater {
                 // Reload the ini file in case there was an update to the ini itself.
                 ConfigFile = await IniFile.LoadAsync( App.ExecutableName + ".ini" );
                 MainConfig = ConfigFile[App.ExecutableName];
-                string currentVersion = MainConfig["CurrentVersion"];
-                if ( string.Compare( currentVersion, latestVersion, true ) != 0 ) {
-                    MainConfig["CurrentVersion"] = latestVersion;
-
-                    ConfigFile.Save();
-                }
+                MainConfig[Constants.LatestVersionKey] = latestVersion;
+                ConfigFile.Save();
                 _log.Info( "Config updated." );
             }
             catch ( Exception e ) {
@@ -282,8 +266,13 @@ namespace Updater {
             _log.Info( "All done, you are now on the latest version." );
         }
 
-        public void OpenChangelog( string version ) {
-            Process.Start( _githubHelper.GetReleaseUri( version ) );
+        public void OpenCurrentVersionDescription() {
+            Process.Start(MainConfig[Constants.LatestVersionDescriptionUriKey]);
+        }
+        public void OpenLatestVersionDescription() {
+            if (LatestVersionResponse != null) {
+                Process.Start(LatestVersionResponse.LatestVersionDescriptionUri);
+            }
         }
         #endregion
 
@@ -364,14 +353,10 @@ namespace Updater {
             ToggleMainButton( CurrentStage != OperationStage.Done );
             CleanUpdateCheckBox.IsEnabled = CurrentStage == OperationStage.Update;
         }
-
-        private string GetFullFileName( string fileName, string version, bool cleanInstall ) {
-            return string.Format( "{0}{1}{2}.zip",
-                fileName,
-                version,
-                cleanInstall ? string.Empty : "patch"
-            );
-        }
         #endregion
+
+        private void DiscordLabel_Click(object sender, RoutedEventArgs e) {
+
+        }
     }
 }

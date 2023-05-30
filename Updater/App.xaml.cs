@@ -13,9 +13,7 @@ namespace Updater {
     /// Interaction logic for App.xaml
     /// </summary>
     public partial class App : Application {
-        public const string CurrentVersion = "0.1.1";
-
-        private const string ObsoleteSuffix = ".old";
+        public const string CurrentVersion = "0.2.0";
 
         public static LogLevel LogLevel { get; }
 
@@ -51,14 +49,14 @@ namespace Updater {
         /// Rename this application and loaded assemblies to something else for self-updating purposes.
         /// </summary>
         public static void ObsoleteSelf() {
-            string oldExe = ExecutablePath + ObsoleteSuffix;
+            string oldExe = ExecutablePath + Constants.ObsoleteSuffix;
             if ( File.Exists( oldExe ) ) {
                 File.Delete( oldExe );
             }
             File.Move( ExecutablePath, oldExe );
             
             foreach ( string assembly in AssemblyPaths ) {
-                string oldAss = assembly + ObsoleteSuffix;
+                string oldAss = assembly + Constants.ObsoleteSuffix;
                 if ( File.Exists( oldAss ) ) {
                     File.Delete( oldAss );
                 }
@@ -72,7 +70,7 @@ namespace Updater {
         public static void PruneSelf() {
             // We only mark for delete because we can't delete a running application or loaded assembly.
 
-            string oldExe = ExecutablePath + ObsoleteSuffix;
+            string oldExe = ExecutablePath + Constants.ObsoleteSuffix;
             if ( File.Exists( oldExe ) ) {
                 if ( File.Exists( ExecutablePath ) ) {
                     _deleteAfterExit.Add( oldExe );
@@ -83,7 +81,7 @@ namespace Updater {
             }
 
             foreach ( string assembly in AssemblyPaths ) {
-                string oldAss = assembly + ObsoleteSuffix;
+                string oldAss = assembly + Constants.ObsoleteSuffix;
                 if ( File.Exists( oldAss ) ) {
                     if ( File.Exists( assembly ) ) {
                         _deleteAfterExit.Add( oldAss );
